@@ -13,6 +13,7 @@
             overflow: hidden;
             color: white;
             font-family: Inter, sans-serif;
+            user-select: none;
         }
 
         body {
@@ -102,13 +103,25 @@
         "keydown",
         "scroll",
         "pointermove",
-        "scroll",
-        "touchstart"
+        "touchstart",
+        "blur",
+        "wheel",
+        "touchmove",
+        "focus",
+        "contextmenu",
+        "dragstart",
+        "drop",
+        "copy",
+        "cut",
+        "paste"
     ]
 
-    function userDidSomething() {
+    function userDidSomething(e) {
         if (!doingNothing) return;
         doingNothing = false;
+        if (e.cancelable) {
+            e.preventDefault();
+        }
 
         clearInterval(tickInterval);
 
@@ -116,6 +129,8 @@
             console.log("Unregistered", event)
             window.removeEventListener(event, userDidSomething);
         }
+        console.log("Unregistered visibilitychange")
+        document.removeEventListener("visibilitychange", userDidSomething)
 
         const time = Math.floor((Date.now() - startedDoingNothing) / 1000);
 
@@ -169,6 +184,8 @@
                 console.log("Registered", event)
                 window.addEventListener(event, userDidSomething);
             }
+            console.log("Registered visibilitychange")
+            document.addEventListener("visibilitychange", userDidSomething)
         }
     });
 </script>
