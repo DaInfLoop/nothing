@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Nothing</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+        html {
+            background-color: #313131;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            color: white;
+            font-family: Inter, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        #start,
+        #main,
+        #gameover,
+        noscript {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <noscript>
+        <h1>The True Nothing.</h1>
+        <span>You have JavaScript disabled, so the website can't detect if you do anything.</span>
+    </noscript>
+    <div id="start" class="hidden">
+        <h1>Nothing.</h1>
+        <span>Click the page to start doing nothing.</span>
+    </div>
+    <div id="main" class="hidden">
+        <span>You've been doing <strong>Nothing</strong> for <strong id="main-time">0 seconds</strong>.</span>
+    </div>
+    <div id="gameover" class="hidden">
+        <h1>You did Something.</h1>
+        <span>You spent <strong id="gameover-time">0 seconds</strong> doing <strong>Nothing</strong>.</span>
+        <small>Returning to start screen in <strong id="gameover-return">5 seconds</strong>...</small>
+    </div>
+</body>
+
+<script module>
+    const startView = document.querySelector('#start');
+    const mainView = document.querySelector('#main');
+    const gameOverView = document.querySelector('#gameover');
+
+    const mainTime = document.querySelector('#main-time');
+    const gameOverTime = document.querySelector('#gameover-time');
+    const gameOverReturn = document.querySelector('#gameover-return');
+
+    window.addEventListener('DOMContentLoaded', () => {
+        startView.classList.remove('hidden');
+    })
+
+    let doingNothing = false;
+
+    let startedDoingNothing = NaN;
+    let tickInterval = null;
+
+    let gameOverStart = NaN;
+    let gameOverInterval = null;
+
+    function formatTime(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        if (minutes === 0) {
+            return `${seconds} second${seconds === 1 ? '' : 's'}`;
+        }
+
+        if (seconds === 0) {
+            return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+        }
+
+        return `${minutes} minute${minutes === 1 ? '' : 's'}, ${seconds} second${seconds === 1 ? '' : 's'}`;
+    }
+
+    const interactionEvents = [
+        "pointerdown",
+        "keydown",
+        "scroll",
+        "pointermove",
+        "scroll",
+        "touchstart"
+    ]
+
+    function userDidSomething() {
+        if (!doingNothing) return;
+        doingNothing = false;
+
+        clearInterval(tickInterval);
+
+        for (const event of interactionEvents) {
+            console.log("Unregistered", event)
+            window.removeEventListener(event, userDidSomething);
+        }
+
+        const time = Math.floor((Date.now() - startedDoingNothing) / 1000);
+
+        gameOverTime.textContent = formatTime(time);
+
+        gameOverView.classList.remove('hidden');
+        mainView.classList.add('hidden');
+
+        document.title = "You did Something."
+
+        gameOverStart = Date.now();
+        gameOverTick();
+        gameOverInterval = setInterval(gameOverTick, 1000);
+    }
+
+    function tick() {
+        const time = Math.floor((Date.now() - startedDoingNothing) / 1000);
+
+        mainTime.textContent = formatTime(time);
+    }
+
+    function gameOverTick() {
+        const elapsed = Math.floor((Date.now() - gameOverStart) / 1000);
+        const time = 5 - elapsed;
+
+        gameOverReturn.textContent = formatTime(time);
+
+        if (time <= 0) {
+            gameOverView.classList.add('hidden');
+            startView.classList.remove('hidden');
+            clearInterval(gameOverInterval);
+            document.title = "Nothing"
+        }
+    }
+
+    window.addEventListener('click', (e) => {
+        if (!doingNothing && !startView.classList.contains('hidden')) {
+            mainTime.textContent = "0 seconds"
+            gameOverTime.textContent = "0 seconds"
+
+            gameOverView.classList.add('hidden')
+            startView.classList.add('hidden')
+            mainView.classList.remove('hidden');
+            startedDoingNothing = Date.now();
+            document.title = "You're doing Nothing."
+            tick();
+            tickInterval = setInterval(tick, 1000);
+            doingNothing = true;
+
+            for (const event of interactionEvents) {
+                console.log("Registered", event)
+                window.addEventListener(event, userDidSomething);
+            }
+        }
+    });
+</script>
+
+</html>
